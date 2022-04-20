@@ -36,10 +36,15 @@ module.exports.createCard = (req, res) => {
 
 module.exports.deleteCard = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId)
-    .then(() => res.send({ message: `Удалена карточка ${req.params.cardId}` }))
+    .then((card) => {
+      if (!card) {
+        return res.status(NOT_FOUND_ERR_CODE).send({ message: 'Карточка не найдена' });
+      }
+      return res.send({ message: `Удалена карточка ${req.params.cardId}` });
+    })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(NOT_FOUND_ERR_CODE).send({ message: `Карта ${req.params.cardId} не найдена` });
+        return res.status(VALIDATION_ERROR_CODE).send({ message: 'Некорректный идентификатор карточки' });
       }
       return res.status(DEFAULT_ERROR_CODE).send({ message: `Ошибка - ${err}` });
     });
@@ -54,7 +59,10 @@ module.exports.likeCard = (req, res) => {
     .then((card) => res.send({ message: `Лайк карточки ${card._id}` }))
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(NOT_FOUND_ERR_CODE).send({ message: `Карта ${req.params.cardId} не найдена` });
+        return res.status(VALIDATION_ERROR_CODE).send({ message: 'Некорректный идентификатор карточки' });
+      }
+      if (err.name === 'TypeError') {
+        return res.status(NOT_FOUND_ERR_CODE).send({ message: 'Карточка не существует' });
       }
       return res.status(DEFAULT_ERROR_CODE).send({ message: `Ошибка - ${err}` });
     });
@@ -69,7 +77,10 @@ module.exports.dislikeCard = (req, res) => {
     .then((card) => res.send({ message: `Дизлайк карточки ${card._id}` }))
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(NOT_FOUND_ERR_CODE).send({ message: `Карта ${req.params.cardId} не найдена` });
+        return res.status(VALIDATION_ERROR_CODE).send({ message: 'Некорректный идентификатор карточки' });
+      }
+      if (err.name === 'TypeError') {
+        return res.status(NOT_FOUND_ERR_CODE).send({ message: 'Карточка не существует' });
       }
       return res.status(DEFAULT_ERROR_CODE).send({ message: `Ошибка - ${err}` });
     });

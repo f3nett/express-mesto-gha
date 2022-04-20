@@ -19,13 +19,13 @@ module.exports.getUserById = (req, res) => {
   User.findById(req.params.userId)
     .then((user) => res.send({
       name: user.name, about: user.about, avatar: user.avatar, _id: user._id,
-      }))
+    }))
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(VALIDATION_ERROR_CODE).send({ message: `Некорректный идентификатор пользователя` });
+        return res.status(VALIDATION_ERROR_CODE).send({ message: 'Некорректный идентификатор пользователя' });
       }
-      else if (err.name === 'TypeError') {
-        return res.status(NOT_FOUND_ERR_CODE).send({ message: `Пользователь ${req.params.userId} не существует` });
+      if (err.name === 'TypeError') {
+        return res.status(NOT_FOUND_ERR_CODE).send({ message: 'Пользователь не существует' });
       }
       return res.status(DEFAULT_ERROR_CODE).send({ message: `Ошибка - ${err}` });
     });
@@ -47,13 +47,13 @@ module.exports.createUser = (req, res) => {
 module.exports.updateUser = (req, res) => {
   const { name, about } = req.body;
   User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
-    .then((user) => res.send({_id: user._id, name, about}))
+    .then((user) => res.send({ _id: user._id, name, about }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         return res.status(VALIDATION_ERROR_CODE).send({ message: err.message });
       }
-      else if (err.name === 'CastError') {
-        return res.status(NOT_FOUND_ERR_CODE).send({ message: `Пользователь ${req.params.userId} не существует` });
+      if (err.name === 'CastError') {
+        return res.status(NOT_FOUND_ERR_CODE).send({ message: 'Пользователь не существует' });
       }
       return res.status(DEFAULT_ERROR_CODE).send({ message: `Ошибка - ${err}` });
     });
@@ -62,10 +62,10 @@ module.exports.updateUser = (req, res) => {
 module.exports.updateUserAvatar = (req, res) => {
   const { avatar } = req.body;
   User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
-    .then((user) => res.send({_id: user._id, name, about}))
+    .then((user) => res.send({ _id: user._id, avatar }))
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(NOT_FOUND_ERR_CODE).send({ message: `Пользователь ${req.params.userId} не существует` });
+        return res.status(NOT_FOUND_ERR_CODE).send({ message: 'Пользователь не существует' });
       }
       return res.status(DEFAULT_ERROR_CODE).send({ message: `Ошибка - ${err}` });
     });

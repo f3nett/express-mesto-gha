@@ -26,8 +26,8 @@ app.use(express.json());
 app.use('/users', usersRoutes);
 app.use('/cards', cardsRoutes);
 
-app.use((req, res, ) => {
-  res.status(NOT_FOUND_ERR_CODE).send({message: `Путь ${req.path} не найден`});
+app.use((req, res) => {
+  res.status(NOT_FOUND_ERR_CODE).send({ message: `Путь ${req.path} не найден` });
 });
 
 // подключение к серверу mongo

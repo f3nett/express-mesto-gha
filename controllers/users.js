@@ -45,7 +45,13 @@ module.exports.createUser = (req, res) => {
 
 module.exports.updateUser = (req, res) => {
   const { name, about } = req.body;
-  User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
+  User.findByIdAndUpdate(
+    req.user._id,
+    { name, about },
+    { new: true, runValidators: true },
+  ).orFail(() => {
+    throw new Error('NotFound');
+  })
     .then((user) => {
       if (!name && !about) {
         return res.status(VALIDATION_ERROR_CODE).send({ message: 'Не указаны атрибуты для обновления' });
@@ -53,6 +59,9 @@ module.exports.updateUser = (req, res) => {
       return res.send({ _id: user._id, name, about });
     })
     .catch((err) => {
+      if (err.message === 'NotFound') {
+        return res.status(NOT_FOUND_ERR_CODE).send({ message: 'Пользователь не найден' });
+      }
       if (err.name === 'ValidationError') {
         return res.status(VALIDATION_ERROR_CODE).send({ message: err.message });
       }
@@ -62,7 +71,13 @@ module.exports.updateUser = (req, res) => {
 
 module.exports.updateUserAvatar = (req, res) => {
   const { avatar } = req.body;
-  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
+  User.findByIdAndUpdate(
+    req.user._id,
+    { avatar },
+    { new: true, runValidators: true },
+  ).orFail(() => {
+    throw new Error('NotFound');
+  })
     .then((user) => {
       if (!avatar) {
         return res.status(VALIDATION_ERROR_CODE).send({ message: 'Не указан аватар для обновления' });
@@ -70,6 +85,9 @@ module.exports.updateUserAvatar = (req, res) => {
       return res.send({ _id: user._id, avatar });
     })
     .catch((err) => {
+      if (err.message === 'NotFound') {
+        return res.status(NOT_FOUND_ERR_CODE).send({ message: 'Пользователь не найден' });
+      }
       if (err.name === 'ValidationError') {
         return res.status(VALIDATION_ERROR_CODE).send({ message: err.message });
       }

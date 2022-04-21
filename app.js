@@ -2,11 +2,10 @@ const express = require('express');
 const mongoose = require('mongoose');
 const usersRoutes = require('./routes/users');
 const cardsRoutes = require('./routes/cards');
+const {NOT_FOUND_ERR_CODE} = require('./lib/constants');
 
 const { PORT = 3000 } = process.env;
 const app = express();
-
-const NOT_FOUND_ERR_CODE = 404;
 
 app.use((req, res, next) => {
   console.log(req.method, req.path);

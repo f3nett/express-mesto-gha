@@ -1,8 +1,5 @@
 const Card = require('../models/card');
-
-const DEFAULT_ERROR_CODE = 500;
-const VALIDATION_ERROR_CODE = 400;
-const NOT_FOUND_ERR_CODE = 404;
+const {DEFAULT_ERROR_CODE, VALIDATION_ERROR_CODE, NOT_FOUND_ERR_CODE} = require('../lib/constants');
 
 module.exports.getCard = (req, res) => {
   Card.find({})
@@ -19,7 +16,7 @@ module.exports.getCard = (req, res) => {
       }));
       res.send(cardsResult);
     })
-    .catch((err) => res.status(DEFAULT_ERROR_CODE).send({ message: `Ошибка - ${err}` }));
+    .catch((err) => res.status(DEFAULT_ERROR_CODE).send({ message: `Ошибка - ${err.message}` }));
 };
 
 module.exports.createCard = (req, res) => {
@@ -30,23 +27,24 @@ module.exports.createCard = (req, res) => {
       if (err.name === 'ValidationError') {
         return res.status(VALIDATION_ERROR_CODE).send({ message: err.message });
       }
-      return res.status(DEFAULT_ERROR_CODE).send({ message: `Ошибка - ${err}` });
+      return res.status(DEFAULT_ERROR_CODE).send({ message: `Ошибка - ${err.message}` });
     });
 };
 
 module.exports.deleteCard = (req, res) => {
-  Card.findByIdAndRemove(req.params.cardId)
-    .then((card) => {
-      if (!card) {
-        return res.status(NOT_FOUND_ERR_CODE).send({ message: 'Карточка не найдена' });
-      }
-      return res.send({ message: `Удалена карточка ${req.params.cardId}` });
+  Card.findByIdAndRemove(req.params.cardId
+    ).orFail(() => {
+      throw new Error('NotFound');
     })
+    .then((card) => res.send({ message: `Удалена карточка ${req.params.cardId}` }))
     .catch((err) => {
       if (err.name === 'CastError') {
         return res.status(VALIDATION_ERROR_CODE).send({ message: 'Некорректный идентификатор карточки' });
       }
-      return res.status(DEFAULT_ERROR_CODE).send({ message: `Ошибка - ${err}` });
+      if (err.message === 'NotFound') {
+        return res.status(NOT_FOUND_ERR_CODE).send({ message: 'Карточка не найдена' });
+      }
+      return res.status(DEFAULT_ERROR_CODE).send({ message: `Ошибка - ${err.message}` });
     });
 };
 
@@ -55,16 +53,18 @@ module.exports.likeCard = (req, res) => {
     req.params.cardId,
     { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
     { new: true },
-  )
+    ).orFail(() => {
+      throw new Error('NotFound');
+    })
     .then((card) => res.send({ message: `Лайк карточки ${card._id}` }))
     .catch((err) => {
       if (err.name === 'CastError') {
         return res.status(VALIDATION_ERROR_CODE).send({ message: 'Некорректный идентификатор карточки' });
       }
-      if (err.name === 'TypeError') {
-        return res.status(NOT_FOUND_ERR_CODE).send({ message: 'Карточка не существует' });
+      if (err.message === 'NotFound') {
+        return res.status(NOT_FOUND_ERR_CODE).send({ message: 'Карточка не найдена' });
       }
-      return res.status(DEFAULT_ERROR_CODE).send({ message: `Ошибка - ${err}` });
+      return res.status(DEFAULT_ERROR_CODE).send({ message: `Ошибка - ${err.message}` });
     });
 };
 
@@ -73,15 +73,17 @@ module.exports.dislikeCard = (req, res) => {
     req.params.cardId,
     { $pull: { likes: req.user._id } }, // убрать _id из массива
     { new: true },
-  )
+    ).orFail(() => {
+      throw new Error('NotFound');
+    })
     .then((card) => res.send({ message: `Дизлайк карточки ${card._id}` }))
     .catch((err) => {
       if (err.name === 'CastError') {
         return res.status(VALIDATION_ERROR_CODE).send({ message: 'Некорректный идентификатор карточки' });
       }
-      if (err.name === 'TypeError') {
-        return res.status(NOT_FOUND_ERR_CODE).send({ message: 'Карточка не существует' });
+      if (err.message === 'NotFound') {
+        return res.status(NOT_FOUND_ERR_CODE).send({ message: 'Карточка не найдена' });
       }
-      return res.status(DEFAULT_ERROR_CODE).send({ message: `Ошибка - ${err}` });
+      return res.status(DEFAULT_ERROR_CODE).send({ message: `Ошибка - ${err.message}` });
     });
 };

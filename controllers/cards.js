@@ -1,5 +1,5 @@
 const Card = require('../models/card');
-const {DEFAULT_ERROR_CODE, VALIDATION_ERROR_CODE, NOT_FOUND_ERR_CODE} = require('../lib/constants');
+const { DEFAULT_ERROR_CODE, VALIDATION_ERROR_CODE, NOT_FOUND_ERR_CODE } = require('../lib/constants');
 
 module.exports.getCard = (req, res) => {
   Card.find({})
@@ -32,11 +32,10 @@ module.exports.createCard = (req, res) => {
 };
 
 module.exports.deleteCard = (req, res) => {
-  Card.findByIdAndRemove(req.params.cardId
-    ).orFail(() => {
-      throw new Error('NotFound');
-    })
-    .then((card) => res.send({ message: `Удалена карточка ${req.params.cardId}` }))
+  Card.findByIdAndRemove(req.params.cardId).orFail(() => {
+    throw new Error('NotFound');
+  })
+    .then(() => res.send({ message: `Удалена карточка ${req.params.cardId}` }))
     .catch((err) => {
       if (err.name === 'CastError') {
         return res.status(VALIDATION_ERROR_CODE).send({ message: 'Некорректный идентификатор карточки' });
@@ -53,9 +52,9 @@ module.exports.likeCard = (req, res) => {
     req.params.cardId,
     { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
     { new: true },
-    ).orFail(() => {
-      throw new Error('NotFound');
-    })
+  ).orFail(() => {
+    throw new Error('NotFound');
+  })
     .then((card) => res.send({ message: `Лайк карточки ${card._id}` }))
     .catch((err) => {
       if (err.name === 'CastError') {
@@ -73,9 +72,9 @@ module.exports.dislikeCard = (req, res) => {
     req.params.cardId,
     { $pull: { likes: req.user._id } }, // убрать _id из массива
     { new: true },
-    ).orFail(() => {
-      throw new Error('NotFound');
-    })
+  ).orFail(() => {
+    throw new Error('NotFound');
+  })
     .then((card) => res.send({ message: `Дизлайк карточки ${card._id}` }))
     .catch((err) => {
       if (err.name === 'CastError') {

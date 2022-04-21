@@ -1,5 +1,5 @@
 const User = require('../models/user');
-const {DEFAULT_ERROR_CODE, VALIDATION_ERROR_CODE, NOT_FOUND_ERR_CODE} = require('../lib/constants');
+const { DEFAULT_ERROR_CODE, VALIDATION_ERROR_CODE, NOT_FOUND_ERR_CODE } = require('../lib/constants');
 
 module.exports.getUser = (req, res) => {
   User.find({})
@@ -13,10 +13,9 @@ module.exports.getUser = (req, res) => {
 };
 
 module.exports.getUserById = (req, res) => {
-  User.findById(req.params.userId
-    ).orFail(() => {
-      throw new Error('NotFound');
-    })
+  User.findById(req.params.userId).orFail(() => {
+    throw new Error('NotFound');
+  })
     .then((user) => res.send({
       name: user.name, about: user.about, avatar: user.avatar, _id: user._id,
     }))
@@ -48,10 +47,10 @@ module.exports.updateUser = (req, res) => {
   const { name, about } = req.body;
   User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
     .then((user) => {
-      if (!name & !about) {
-        return res.status(VALIDATION_ERROR_CODE).send({ message: `Не указаны атрибуты для обновления` });
+      if (!name && !about) {
+        return res.status(VALIDATION_ERROR_CODE).send({ message: 'Не указаны атрибуты для обновления' });
       }
-      res.send({ _id: user._id, name, about })
+      return res.send({ _id: user._id, name, about });
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -66,9 +65,9 @@ module.exports.updateUserAvatar = (req, res) => {
   User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
     .then((user) => {
       if (!avatar) {
-        return res.status(VALIDATION_ERROR_CODE).send({ message: `Не указан аватар для обновления` });
+        return res.status(VALIDATION_ERROR_CODE).send({ message: 'Не указан аватар для обновления' });
       }
-      res.send({ _id: user._id, avatar })
+      return res.send({ _id: user._id, avatar });
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {

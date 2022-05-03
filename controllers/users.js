@@ -5,7 +5,6 @@ const { getJwtToken } = require('../utils/jwt');
 const NotFoundError = require('../errors/not-found-err');
 const ValidationError = require('../errors/validation-err');
 const ConflictError = require('../errors/conflict-err');
-const { send } = require('express/lib/response');
 
 module.exports.getUser = (req, res, next) => {
   User.find({})

@@ -1,32 +1,56 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const { celebrate, Joi } = require('celebrate');
+const { errors } = require('celebrate');
 const usersRoutes = require('./routes/users');
 const cardsRoutes = require('./routes/cards');
-const { NOT_FOUND_ERR_CODE } = require('./lib/constants');
+const auth = require('./middlewares/auth');
+const { login, createUser } = require('./controllers/users');
 
 const { PORT = 3000 } = process.env;
 const app = express();
+
+app.use(express.json());
 
 app.use((req, res, next) => {
   console.log(req.method, req.path);
   next();
 });
 
-// временное решение для авторизации для создания карточек
-app.use((req, res, next) => {
-  req.user = {
-    _id: '625dabb165e46b13c85e6165',
-  };
+app.post('/signin', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required(),
+    password: Joi.string().required().min(8),
+  }),
+}), login);
 
-  next();
-});
+app.post('/signup', celebrate({
+  body: Joi.object().keys({
+    name: Joi.string().required().min(2).max(30),
+    about: Joi.string().required().min(2).max(30),
+    avatar: Joi.string().required(),
+    email: Joi.string().required(),
+    password: Joi.string().required().min(8),
+  }),
+}), createUser);
 
-app.use(express.json());
+// авторизация
+app.use(auth);
+
 app.use('/users', usersRoutes);
 app.use('/cards', cardsRoutes);
 
-app.use((req, res) => {
-  res.status(NOT_FOUND_ERR_CODE).send({ message: `Путь ${req.path} не найден` });
+// обработчики ошибок
+app.use(errors()); // обработчик ошибок celebrate
+
+// централизованный обработчик
+app.use((err, req, res, next) => {
+  const { statusCode = 500, message } = err;
+  res.status(statusCode).send({
+      message: statusCode === 500
+        ? 'На сервере произошла ошибка'
+        : message,
+    });
 });
 
 // подключение к серверу mongo

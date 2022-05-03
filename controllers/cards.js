@@ -1,6 +1,7 @@
 const Card = require('../models/card');
 const NotFoundError = require('../errors/not-found-err');
 const ValidationError = require('../errors/validation-err');
+const ForbiddenError = require('../errors/forbidden-err');
 
 module.exports.getCard = (req, res, next) => {
   Card.find({})
@@ -33,16 +34,26 @@ module.exports.createCard = (req, res, next) => {
 };
 
 module.exports.deleteCard = (req, res, next) => {
-  Card.findByIdAndRemove(req.params.cardId).orFail(() => {
+  Card.findById(req.params.cardId).orFail(() => {
     throw new Error('NotFound');
   })
-    .then(() => res.send({ message: `Удалена карточка ${req.params.cardId}` }))
+    .then((card) => {
+      if (card.owner.toString() !== req.user._id) {
+        throw new Error('Forbidden');
+      }
+      Card.findByIdAndRemove(req.params.cardId)
+        .then(() => res.send({ message: `Удалена карточка ${req.params.cardId}` }))
+        .catch(next);
+    })
     .catch((err) => {
       if (err.name === 'CastError') {
         throw new ValidationError('Некорректный идентификатор карточки');
       }
       if (err.message === 'NotFound') {
         throw new NotFoundError('Карточка не найдена');
+      }
+      if (err.message === 'Forbidden') {
+        throw new ForbiddenError('Карточка не принадлежит пользователю');
       }
     })
     .catch(next);

@@ -10,7 +10,7 @@ module.exports.getUser = (req, res, next) => {
   User.find({})
     .then((users) => {
       const usersResult = users.map((user) => ({
-        name: user.name, about: user.about, avatar: user.avatar, _id: user._id,
+        name: user.name, about: user.about, avatar: user.avatar, email: user.email, _id: user._id,
       }));
       res.send(usersResult);
     })
@@ -22,7 +22,7 @@ module.exports.getCurrentUser = (req, res, next) => {
     throw new NotFoundError('Пользователь не найден');
   })
     .then((user) => res.send({
-      name: user.name, about: user.about, avatar: user.avatar, _id: user._id,
+      name: user.name, about: user.about, avatar: user.avatar, email: user.email, _id: user._id,
     }))
     .catch(next);
 };
@@ -32,7 +32,7 @@ module.exports.getUserById = (req, res, next) => {
     throw new NotFoundError('Пользователь не найден');
   })
     .then((user) => res.send({
-      name: user.name, about: user.about, avatar: user.avatar, _id: user._id,
+      name: user.name, about: user.about, avatar: user.avatar, email: user.email, _id: user._id,
     }))
     .catch((err) => {
       if (err.name === 'CastError') {

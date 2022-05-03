@@ -44,7 +44,7 @@ module.exports.getUserById = (req, res, next) => {
 
 module.exports.createUser = (req, res, next) => {
   const {
-    name, about, avatar, email, password
+    name, about, avatar, email, password,
   } = req.body;
 
   bcrypt.hash(password, SALT_ROUNDS)
@@ -53,7 +53,9 @@ module.exports.createUser = (req, res, next) => {
         name, about, avatar, email, password: hash,
       },
     ))
-    .then((user) => res.send({ _id: user._id, name, about, avatar, email }))
+    .then((user) => res.send({
+      _id: user._id, name, about, avatar, email,
+    }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         throw new ValidationError(err.message);

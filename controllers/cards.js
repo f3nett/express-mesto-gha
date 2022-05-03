@@ -34,12 +34,15 @@ module.exports.createCard = (req, res, next) => {
 
 module.exports.deleteCard = (req, res, next) => {
   Card.findByIdAndRemove(req.params.cardId).orFail(() => {
-    throw new NotFoundError('Карточка не найдена');
+    throw new Error('NotFound');
   })
     .then(() => res.send({ message: `Удалена карточка ${req.params.cardId}` }))
     .catch((err) => {
       if (err.name === 'CastError') {
         throw new ValidationError('Некорректный идентификатор карточки');
+      }
+      if (err.message === 'NotFound') {
+        throw new NotFoundError('Карточка не найдена');
       }
     })
     .catch(next);
@@ -51,12 +54,15 @@ module.exports.likeCard = (req, res, next) => {
     { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
     { new: true },
   ).orFail(() => {
-    throw new NotFoundError('Карточка не найдена');
+    throw new Error('NotFound');
   })
     .then((card) => res.send({ message: `Лайк карточки ${card._id}` }))
     .catch((err) => {
       if (err.name === 'CastError') {
         throw new ValidationError('Некорректный идентификатор карточки');
+      }
+      if (err.message === 'NotFound') {
+        throw new NotFoundError('Карточка не найдена');
       }
     })
     .catch(next);
@@ -68,12 +74,15 @@ module.exports.dislikeCard = (req, res, next) => {
     { $pull: { likes: req.user._id } }, // убрать _id из массива
     { new: true },
   ).orFail(() => {
-    throw new NotFoundError('Карточка не найдена');
+    throw new Error('NotFound');
   })
     .then((card) => res.send({ message: `Дизлайк карточки ${card._id}` }))
     .catch((err) => {
       if (err.name === 'CastError') {
         throw new ValidationError('Некорректный идентификатор карточки');
+      }
+      if (err.message === 'NotFound') {
+        throw new NotFoundError('Карточка не найдена');
       }
     })
     .catch(next);

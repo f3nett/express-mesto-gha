@@ -11,6 +11,8 @@ node_modules
 
 # Optional REPL history
 .DS_Store
+*.DS_Store
+._*
 .idea
 .vscode
 

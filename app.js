@@ -7,6 +7,7 @@ const cardsRoutes = require('./routes/cards');
 const auth = require('./middlewares/auth');
 const { login, createUser } = require('./controllers/users');
 const NotFoundError = require('./errors/not-found-err');
+const { requestLogger, errorLogger } = require('./middlewares/logger');
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -17,6 +18,9 @@ app.use((req, res, next) => {
   console.log(req.method, req.path);
   next();
 });
+
+// подключаем логгер запросов
+app.use(requestLogger);
 
 app.post('/signin', celebrate({
   body: Joi.object().keys({
@@ -40,6 +44,9 @@ app.use(auth);
 
 app.use('/users', usersRoutes);
 app.use('/cards', cardsRoutes);
+
+// подключаем логгер ошибок
+app.use(errorLogger);
 
 // обработчики ошибок
 app.use((req, res, next) => {

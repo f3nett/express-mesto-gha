@@ -88,7 +88,13 @@ module.exports.updateUser = (req, res, next) => {
       if (!name && !about) {
         throw new ValidationError('Не указаны атрибуты для обновления');
       }
-      return res.send({ _id: user._id, name, about });
+      return res.send({
+        name,
+        about,
+        avatar: user.avatar,
+        email: user.email,
+        _id: user._id,
+      });
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -114,7 +120,13 @@ module.exports.updateUserAvatar = (req, res, next) => {
       if (!avatar) {
         throw new ValidationError('Не указан аватар для обновления');
       }
-      return res.send({ _id: user._id, avatar });
+      return res.send({
+        name: user.name,
+        about: user.about,
+        avatar,
+        email: user.email,
+        _id: user._id,
+      });
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {

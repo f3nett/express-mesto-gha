@@ -67,7 +67,7 @@ module.exports.likeCard = (req, res, next) => {
   ).orFail(() => {
     throw new Error('NotFound');
   })
-    .then((card) => res.send({ message: `Лайк карточки ${card._id}` }))
+    .then((card) => res.send(card))
     .catch((err) => {
       if (err.name === 'CastError') {
         throw new ValidationError('Некорректный идентификатор карточки');
@@ -87,7 +87,7 @@ module.exports.dislikeCard = (req, res, next) => {
   ).orFail(() => {
     throw new Error('NotFound');
   })
-    .then((card) => res.send({ message: `Дизлайк карточки ${card._id}` }))
+    .then((card) => res.send(card))
     .catch((err) => {
       if (err.name === 'CastError') {
         throw new ValidationError('Некорректный идентификатор карточки');

@@ -2,20 +2,19 @@ const express = require('express');
 const mongoose = require('mongoose');
 const { celebrate, Joi } = require('celebrate');
 const { errors } = require('celebrate');
-const cors = require('cors');
 const usersRoutes = require('./routes/users');
 const cardsRoutes = require('./routes/cards');
 const auth = require('./middlewares/auth');
 const { login, createUser } = require('./controllers/users');
 const NotFoundError = require('./errors/not-found-err');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
-//const { cors } = require('./middlewares/cors');
+const { cors } = require('./middlewares/cors');
 
 const { PORT = 3000 } = process.env;
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+app.use(cors);
 
 app.use((req, res, next) => {
   console.log(req.method, req.path);

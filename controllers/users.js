@@ -21,35 +21,27 @@ module.exports.getUser = (req, res, next) => {
 
 module.exports.getCurrentUser = (req, res, next) => {
   User.findById(req.user._id).orFail(() => {
-    throw new Error('NotFound');
+    next(new NotFoundError('Пользователь не найден'));
   })
     .then((user) => res.send({
       name: user.name, about: user.about, avatar: user.avatar, email: user.email, _id: user._id,
     }))
-    .catch((err) => {
-      if (err.message === 'NotFound') {
-        throw new NotFoundError('Пользователь не найден');
-      }
-    })
     .catch(next);
 };
 
 module.exports.getUserById = (req, res, next) => {
   User.findById(req.params.userId).orFail(() => {
-    throw new Error('NotFound');
+    next(new NotFoundError('Пользователь не найден'));
   })
     .then((user) => res.send({
       name: user.name, about: user.about, avatar: user.avatar, email: user.email, _id: user._id,
     }))
     .catch((err) => {
       if (err.name === 'CastError') {
-        throw new ValidationError('Некорректный идентификатор пользователя');
+        next(new ValidationError('Некорректный идентификатор пользователя'));
       }
-      if (err.message === 'NotFound') {
-        throw new NotFoundError('Пользователь не найден');
-      }
-    })
-    .catch(next);
+      return next(err);
+    });
 };
 
 module.exports.createUser = (req, res, next) => {
@@ -68,13 +60,13 @@ module.exports.createUser = (req, res, next) => {
     }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new ValidationError(err.message);
+        next(new ValidationError(err.message));
       }
       if (err.code === 11000) {
-        throw new ConflictError('Такой пользователь уже существует');
+        next(new ConflictError('Такой пользователь уже существует'));
       }
-    })
-    .catch(next);
+      return next(err);
+    });
 };
 
 module.exports.updateUser = (req, res, next) => {
@@ -84,11 +76,11 @@ module.exports.updateUser = (req, res, next) => {
     { name, about },
     { new: true, runValidators: true },
   ).orFail(() => {
-    throw new Error('NotFound');
+    next(new NotFoundError('Пользователь не найден'));
   })
     .then((user) => {
       if (!name && !about) {
-        throw new ValidationError('Не указаны атрибуты для обновления');
+        next(new ValidationError('Не указаны атрибуты для обновления'));
       }
       return res.send({
         name,
@@ -100,13 +92,10 @@ module.exports.updateUser = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new ValidationError(err.message);
+        next(new ValidationError(err.message));
       }
-      if (err.message === 'NotFound') {
-        throw new NotFoundError('Пользователь не найден');
-      }
-    })
-    .catch(next);
+      return next(err);
+    });
 };
 
 module.exports.updateUserAvatar = (req, res, next) => {
@@ -116,11 +105,11 @@ module.exports.updateUserAvatar = (req, res, next) => {
     { avatar },
     { new: true, runValidators: true },
   ).orFail(() => {
-    throw new Error('NotFound');
+    next(new NotFoundError('Пользователь не найден'));
   })
     .then((user) => {
       if (!avatar) {
-        throw new ValidationError('Не указан аватар для обновления');
+        next(new ValidationError('Не указан аватар для обновления'));
       }
       return res.send({
         name: user.name,
@@ -132,13 +121,13 @@ module.exports.updateUserAvatar = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new ValidationError(err.message);
+        next(new ValidationError(err.message));
       }
       if (err.message === 'NotFound') {
-        throw new NotFoundError('Пользователь не найден');
+        next(new NotFoundError('Пользователь не найден'));
       }
-    })
-    .catch(next);
+      return next(err);
+    });
 };
 
 module.exports.login = (req, res, next) => {

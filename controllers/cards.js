@@ -27,19 +27,19 @@ module.exports.createCard = (req, res, next) => {
     .then((card) => res.send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new ValidationError(err.message);
+        next(new ValidationError(err.message));
       }
-    })
-    .catch(next);
+      return next(err);
+    });
 };
 
 module.exports.deleteCard = (req, res, next) => {
   Card.findById(req.params.cardId).orFail(() => {
-    throw new Error('NotFound');
+    next(new NotFoundError('Карточка не найдена'));
   })
     .then((card) => {
       if (card.owner.toString() !== req.user._id) {
-        throw new Error('Forbidden');
+        next(new ForbiddenError('Карточка не принадлежит пользователю'));
       }
       Card.findByIdAndRemove(req.params.cardId)
         .then(() => res.send({ message: `Удалена карточка ${req.params.cardId}` }))
@@ -47,16 +47,10 @@ module.exports.deleteCard = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        throw new ValidationError('Некорректный идентификатор карточки');
+        next(new ValidationError('Некорректный идентификатор карточки'));
       }
-      if (err.message === 'NotFound') {
-        throw new NotFoundError('Карточка не найдена');
-      }
-      if (err.message === 'Forbidden') {
-        throw new ForbiddenError('Карточка не принадлежит пользователю');
-      }
-    })
-    .catch(next);
+      return next(err);
+    });
 };
 
 module.exports.likeCard = (req, res, next) => {
@@ -65,18 +59,15 @@ module.exports.likeCard = (req, res, next) => {
     { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
     { new: true },
   ).orFail(() => {
-    throw new Error('NotFound');
+    next(new NotFoundError('Карточка не найдена'));
   })
     .then((card) => res.send(card))
     .catch((err) => {
       if (err.name === 'CastError') {
-        throw new ValidationError('Некорректный идентификатор карточки');
+        next(new ValidationError('Некорректный идентификатор карточки'));
       }
-      if (err.message === 'NotFound') {
-        throw new NotFoundError('Карточка не найдена');
-      }
-    })
-    .catch(next);
+      return next(err);
+    });
 };
 
 module.exports.dislikeCard = (req, res, next) => {
@@ -85,16 +76,13 @@ module.exports.dislikeCard = (req, res, next) => {
     { $pull: { likes: req.user._id } }, // убрать _id из массива
     { new: true },
   ).orFail(() => {
-    throw new Error('NotFound');
+    next(new NotFoundError('Карточка не найдена'));
   })
     .then((card) => res.send(card))
     .catch((err) => {
       if (err.name === 'CastError') {
-        throw new ValidationError('Некорректный идентификатор карточки');
+        next(new ValidationError('Некорректный идентификатор карточки'));
       }
-      if (err.message === 'NotFound') {
-        throw new NotFoundError('Карточка не найдена');
-      }
-    })
-    .catch(next);
+      return next(err);
+    });
 };

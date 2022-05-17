@@ -1,15 +1,15 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
-const { celebrate, Joi } = require('celebrate');
 const { errors } = require('celebrate');
 const usersRoutes = require('./routes/users');
 const cardsRoutes = require('./routes/cards');
-const auth = require('./middlewares/auth');
-const { login, createUser } = require('./controllers/users');
-const NotFoundError = require('./errors/not-found-err');
-const { requestLogger, errorLogger } = require('./middlewares/logger');
 const { cors } = require('./middlewares/cors');
+const { requestLogger, errorLogger } = require('./middlewares/logger');
+const auth = require('./middlewares/auth');
+const { wrongPathHandler, errHandler } = require('./middlewares/errhandler');
+const { signinValidation, signupValidation } = require('./validation/signin');
+const { login, createUser } = require('./controllers/users');
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -22,58 +22,34 @@ app.use((req, res, next) => {
   next();
 });
 
-// подключаем логгер запросов
+// логгер запросов
 app.use(requestLogger);
 
+// рут для краш-теста
 app.get('/crash-test', () => {
   setTimeout(() => {
     throw new Error('Сервер сейчас упадёт');
   }, 0);
 });
 
-app.post('/signin', celebrate({
-  body: Joi.object().keys({
-    email: Joi.string().required().email(),
-    password: Joi.string().required().min(8),
-  }),
-}), login);
-
-app.post('/signup', celebrate({
-  body: Joi.object().keys({
-    name: Joi.string().min(2).max(30),
-    about: Joi.string().min(2).max(30),
-    avatar: Joi.string().regex(/^(http|https):\/\/(\w+:{0,1})?(([\w-.~:/?#[\]@!$&'()*+,;=]*)+)/),
-    email: Joi.string().required().email(),
-    password: Joi.string().required().min(8),
-  }),
-}), createUser);
+// руты, не требующие авторизации
+app.post('/signin', signinValidation, login);
+app.post('/signup', signupValidation, createUser);
 
 // авторизация
 app.use(auth);
 
+// руты, требующие авторизации
 app.use('/users', usersRoutes);
 app.use('/cards', cardsRoutes);
 
-// подключаем логгер ошибок
+// логгер ошибок
 app.use(errorLogger);
 
 // обработчики ошибок
-app.use((req, res, next) => {
-  next(new NotFoundError(`Путь ${req.path} не найден`));
-});
-
-app.use(errors()); // обработчик ошибок celebrate
-
-// централизованный обработчик
-app.use((err, req, res, next) => {
-  const { statusCode = 500, message } = err;
-  res.status(statusCode).send({
-    message: statusCode === 500
-      ? 'На сервере произошла ошибка'
-      : message,
-  });
-  next();
-});
+app.use(wrongPathHandler);
+app.use(errors());
+app.use(errHandler);
 
 // подключение к серверу mongo
 async function main() {

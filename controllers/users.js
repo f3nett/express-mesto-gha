@@ -20,9 +20,8 @@ module.exports.getUser = (req, res, next) => {
 };
 
 module.exports.getCurrentUser = (req, res, next) => {
-  User.findById(req.user._id).orFail(() => {
-    next(new NotFoundError('Пользователь не найден'));
-  })
+  User.findById(req.user._id)
+    .orFail(() => next(new NotFoundError('Пользователь не найден')))
     .then((user) => res.send({
       name: user.name, about: user.about, avatar: user.avatar, email: user.email, _id: user._id,
     }))
@@ -30,15 +29,14 @@ module.exports.getCurrentUser = (req, res, next) => {
 };
 
 module.exports.getUserById = (req, res, next) => {
-  User.findById(req.params.userId).orFail(() => {
-    next(new NotFoundError('Пользователь не найден'));
-  })
+  User.findById(req.params.userId)
+    .orFail(() => next(new NotFoundError('Пользователь не найден')))
     .then((user) => res.send({
       name: user.name, about: user.about, avatar: user.avatar, email: user.email, _id: user._id,
     }))
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new ValidationError('Некорректный идентификатор пользователя'));
+        return next(new ValidationError('Некорректный идентификатор пользователя'));
       }
       return next(err);
     });
@@ -61,11 +59,9 @@ module.exports.createUser = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new ValidationError(err.message));
-      }
-      if (err.code === 11000) {
+      } else if (err.code === 11000) {
         next(new ConflictError('Такой пользователь уже существует'));
-      }
-      return next(err);
+      } else next(err);
     });
 };
 
@@ -75,12 +71,10 @@ module.exports.updateUser = (req, res, next) => {
     req.user._id,
     { name, about },
     { new: true, runValidators: true },
-  ).orFail(() => {
-    next(new NotFoundError('Пользователь не найден'));
-  })
+  ).orFail(() => next(new NotFoundError('Пользователь не найден')))
     .then((user) => {
       if (!name && !about) {
-        next(new ValidationError('Не указаны атрибуты для обновления'));
+        return next(new ValidationError('Не указаны атрибуты для обновления'));
       }
       return res.send({
         name,
@@ -92,7 +86,7 @@ module.exports.updateUser = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new ValidationError(err.message));
+        return next(new ValidationError(err.message));
       }
       return next(err);
     });
@@ -104,12 +98,10 @@ module.exports.updateUserAvatar = (req, res, next) => {
     req.user._id,
     { avatar },
     { new: true, runValidators: true },
-  ).orFail(() => {
-    next(new NotFoundError('Пользователь не найден'));
-  })
+  ).orFail(() => next(new NotFoundError('Пользователь не найден')))
     .then((user) => {
       if (!avatar) {
-        next(new ValidationError('Не указан аватар для обновления'));
+        return next(new ValidationError('Не указан аватар для обновления'));
       }
       return res.send({
         name: user.name,
@@ -121,10 +113,7 @@ module.exports.updateUserAvatar = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new ValidationError(err.message));
-      }
-      if (err.message === 'NotFound') {
-        next(new NotFoundError('Пользователь не найден'));
+        return next(new ValidationError(err.message));
       }
       return next(err);
     });
